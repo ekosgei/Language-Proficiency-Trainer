@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,11 +13,14 @@ import java.util.Set;
 public class FlashcardManager {
 
     private List<Flashcard> flashcards;
-    private Map<Difficulty, Flashcard> mapOfFlashcards;
+    private Map<Difficulty, List<Flashcard>> mapOfFlashcards;
 
     public FlashcardManager() {
         this.flashcards = new ArrayList<>();
-        this.mapOfFlashcards = new HashMap<>();
+        this.mapOfFlashcards = new EnumMap<>(Difficulty.class);
+        for (Difficulty d : Difficulty.values()) {
+            mapOfFlashcards.put(d,new ArrayList<>());
+        }
 
     }
 
@@ -26,13 +30,19 @@ public class FlashcardManager {
      * REQUIRES: Flashcard not duplicated
      */
     public void addFlashcard(Flashcard f) {
-        if (flashcards.contains(f)) {
+        if (!flashcards.contains(f)) {
             this.flashcards.add(f);
+            List<Flashcard> cards = mapOfFlashcards.get(f.getDifficulty());
+            cards.add(f);
+            mapOfFlashcards.put(f.getDifficulty(), cards);
         }
+        
     }
 
     public void removeflashcard(Flashcard f) {
         this.flashcards.remove(f);
+        List<Flashcard> cards = mapOfFlashcards.get(f.getDifficulty());
+        cards.remove(f);
     }
 
     // /*
@@ -47,12 +57,12 @@ public class FlashcardManager {
 
     // return list of flashcards in deck
     public List<Flashcard> getFlashcards() {
-        return new ArrayList<Flashcard>();
+        return flashcards;
     }
 
-    // return set of flashcards in deck based on difficulty
-    public Set<Flashcard> getSetOfFlashcard(Difficulty d) {
-        return new HashSet<Flashcard>();
+    // return list of flashcards in deck based on difficulty
+    public List<Flashcard> getCardsByDifficulty(Difficulty d) {
+        return mapOfFlashcards.get(d);
     }
 
 }

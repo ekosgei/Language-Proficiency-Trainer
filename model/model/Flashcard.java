@@ -1,7 +1,5 @@
 package model;
 
-import java.util.Locale.Category;
-
 // This class represents a single flashcard containing a word and its translation.
 // It also includes the word's difficulty level and  part of speech.
 public class Flashcard {
