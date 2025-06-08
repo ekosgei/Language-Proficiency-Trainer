@@ -13,7 +13,7 @@ import java.util.Set;
 public class FlashcardManager {
 
     private List<Flashcard> flashcards;
-    private Map<Difficulty, List<Flashcard>> mapOfFlashcards;
+    protected Map<Difficulty, List<Flashcard>> mapOfFlashcards;
 
     public FlashcardManager() {
         this.flashcards = new ArrayList<>();
