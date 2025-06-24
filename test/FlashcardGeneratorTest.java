@@ -47,7 +47,7 @@ public class FlashcardGeneratorTest {
         generator.addFlashcard(f1);
         assertEquals(0,generator.getcorrectAnswers());
         assertEquals(Difficulty.EASY,generator.getCurrentLevel());
-        assertEquals("Buch",generator.nextFlashCard());
+        assertEquals(f1,generator.nextFlashCard());
     }
 
 
@@ -56,7 +56,7 @@ public class FlashcardGeneratorTest {
         generator.addFlashcard(f4);
         assertEquals(0,generator.getcorrectAnswers());
         assertEquals(Difficulty.MEDIUM,generator.getCurrentLevel());
-        assertEquals("essen",generator.nextFlashCard());
+        assertEquals(f4,generator.nextFlashCard());
     }
 
     @Test
@@ -64,7 +64,7 @@ public class FlashcardGeneratorTest {
         generator.addFlashcard(f8);
         assertEquals(0,generator.getcorrectAnswers());
         assertEquals(Difficulty.HARD,generator.getCurrentLevel());
-        assertEquals("Rucken",generator.nextFlashCard());
+        assertEquals(f8,generator.nextFlashCard());
     }
  
     @Test
@@ -72,18 +72,18 @@ public class FlashcardGeneratorTest {
         generator.addFlashcard(f1);
         generator.addFlashcard(f8);
         generator.addFlashcard(f4);
-        assertEquals("Buch",generator.nextFlashCard());
+        assertEquals(f1,generator.nextFlashCard());
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
-        assertEquals("essen",generator.nextFlashCard());   
+        assertEquals(f4,generator.nextFlashCard());   
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
         generator.addcorrectAnswers();
-        assertEquals("Rucken",generator.nextFlashCard());
+        assertEquals(f8,generator.nextFlashCard());
     
 
 

@@ -31,14 +31,14 @@ public class FlashcardGenerator extends FlashcardManager {
      * REQUIRES: Deck Have atleast 1 flashcard.
      */
 
-    public String nextFlashCard() {
+    public Flashcard nextFlashCard() {
         Difficulty level = getCurrentLevel();
         List<Flashcard> cards = getCardsByDifficulty(level);
         Random rand = new Random();
 
-        Flashcard card = cards.get(rand.nextInt(cards.size()));
+        cards.get(rand.nextInt(cards.size()));
 
-        return card.getWord();
+        return cards.get(rand.nextInt(cards.size()));
     }
 
     /*
@@ -74,7 +74,10 @@ public class FlashcardGenerator extends FlashcardManager {
         return this.correctAnswers;
     }
 
-   
+   /*
+    * EFFECTS: returns the current level of difficulty based on the player's points. 
+    If the level does not have any cards, the method returns a level that has cards.
+    */
     public Difficulty getCurrentLevel() {
         Difficulty level = null;
     
@@ -86,9 +89,10 @@ public class FlashcardGenerator extends FlashcardManager {
             level = Difficulty.HARD;
         }
 
-        if (getCardsByDifficulty(level).isEmpty()) {
-            List<Flashcard> cards = getCardsByDifficulty(level);
-            for (Difficulty d : Difficulty.values()) {
+        if (getCardsByDifficulty(level).isEmpty()) { 
+            List<Flashcard> cards = getCardsByDifficulty(level);  
+            for (Difficulty d : Difficulty.values()) { 
+                cards = getCardsByDifficulty(d);
                 if (!cards.isEmpty()) {
                     return d;
                 }
