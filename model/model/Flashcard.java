@@ -1,19 +1,18 @@
 package model;
 
-// This class represents a single flashcard containing a word and its translation.
-// It also includes the word's difficulty level and  part of speech.
-public class Flashcard {
+// This abstract class represents a general flashcard containing a word and its translation.
+// It also includes the word's GENDER level and  part of speech.
+public abstract class Flashcard {
 
-    private String word;
-    private String translation;
-    private Difficulty difficulty;
-    private PartOfSpeech partOfSpeech;
+    protected String word;
+    protected String translation;
+    protected PartOfSpeech partOfSpeech;
 
-    public Flashcard(String w, String tr, Difficulty dif, PartOfSpeech p) {
+
+    public Flashcard(String w, String tr) {
         this.word = w;
         this.translation = tr;
-        this.difficulty = dif;
-        this.partOfSpeech = p;
+        this.partOfSpeech = PartOfSpeech.NOUN;
 
     }
 
@@ -25,9 +24,7 @@ public class Flashcard {
         return this.translation;
     }
 
-    public Difficulty getDifficulty() {
-        return this.difficulty;
-    }
+  
 
     public PartOfSpeech getPartOfSpeech() {
         return this.partOfSpeech;
@@ -41,10 +38,7 @@ public class Flashcard {
         this.translation = s;
     }
 
-    public void setDifficulty(Difficulty d) {
-        this.difficulty = d;
-    }
-
+   
     public void setPartOfSpeech(PartOfSpeech p) {
         this.partOfSpeech = p;
     }

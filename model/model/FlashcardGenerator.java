@@ -1,4 +1,4 @@
-package model;
+/*package model;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +29,7 @@ public class FlashcardGenerator extends FlashcardManager {
      * if There are no more cards in deck, "All cards in Deck have been played"
      * MODIFIES: correctAnswers;
      * REQUIRES: Deck Have atleast 1 flashcard.
-     */
+     
 
     public Flashcard nextFlashCard() {
         Difficulty level = getCurrentLevel();
@@ -50,25 +50,12 @@ public class FlashcardGenerator extends FlashcardManager {
      * receive 1 point. Player receives 0 otherwise.
      * MODIFIES: correctAnswers
      * 
-     */
+     
     public void addcorrectAnswers() {
         this.correctAnswers++;
     }
 
-    /*
-     * EFFECTS: Check whether the answer provided matched the tranlations of a word
-     * 
-     */
-
-    public boolean isAnswerCorrect(Flashcard card, String userAnswer) {
-        String translation = card.getTranslation();
-        if (userAnswer.equalsIgnoreCase(translation)) {
-            addcorrectAnswers();
-            return true;
-        } else {
-            return false;
-        }
-    }
+  
 
     public int getcorrectAnswers() {
         return this.correctAnswers;
@@ -77,7 +64,7 @@ public class FlashcardGenerator extends FlashcardManager {
    /*
     * EFFECTS: returns the current level of difficulty based on the player's points. 
     If the level does not have any cards, the method returns a level that has cards.
-    */
+    
     public Difficulty getCurrentLevel() {
         Difficulty level = null;
     
@@ -101,3 +88,4 @@ public class FlashcardGenerator extends FlashcardManager {
         return level;
     }
 }
+*/
