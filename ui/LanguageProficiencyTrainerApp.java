@@ -1,20 +1,23 @@
 package ui;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
-import javax.sound.midi.Track;
-
-import org.junit.After;
-
-import model.Difficulty;
 import model.Flashcard;
-import model.FlashcardGenerator;
-import model.FlashcardManager;
-import model.PartOfSpeech;
 
-public class LanguageProficiencyTrainerApp {
+import model.FlashcardManager;
+import model.Gender;
+import model.Germ_Flashcard;
+import model.Observable;
+import model.Observer;
+import model.ScoreQuiz;
+import model.SpacedRepetition;
+
+public class LanguageProficiencyTrainerApp extends Observable {
 
     /*
      * As a user I want to be able to:
@@ -43,10 +46,14 @@ public class LanguageProficiencyTrainerApp {
 
     // Bank teller application
 
-    private FlashcardGenerator cardGenerator;
+    private ScoreQuiz scoreQuiz;
+    // private SpacedRepetition spacedRepetitionQuiz;
+    private SpacedRepetition spacedRepetition;
+    private List<Observer> observers;
+    private Map<String, Runnable> commandMap;
     // private sav;
     private Scanner input;
-    private List<Flashcard> viewedFlashcards;
+    private Flashcard currentCard;
 
     // EFFECTS: runs the teller application
     public LanguageProficiencyTrainerApp() {
@@ -78,133 +85,244 @@ public class LanguageProficiencyTrainerApp {
 
     // MODIFIES: this
     // EFFECTS: processes user command
+    private void initializeCommands() {
+        commandMap = new HashMap<>();
+        commandMap.put("a", this::doAddFlashcard);
+        commandMap.put("r", this::doRemoveFlashcard);
+        commandMap.put("s", this::doStartQuiz);
+        commandMap.put("v", this::doViewVocabularyList);
+        commandMap.put("q", this::quitApp);
+
+    }
+
+    /*
+     * EFFECTS: checks if command is in map. If found, runs the corresponding method
+     * associated with it. If it doesn't
+     * it runs handleInvalidCommand() instead.
+     */
     private void processCommand(String command) {
-        if (command.equals("a")) {
-            doAddFlashcard();
-        } else if (command.equals("r")) {
-            doRemoveFlashcard();
-        } else if (command.equals("s")) {
-            doStartQuiz();
-            // } else if (command.equals("e")) {
-            // doEndQuiz();
-        } else if (command.equals("v")) {
-            doViewVocabularyList();
-        } else {
-            System.out.println("Selection not valid...");
-        }
+        commandMap.getOrDefault(command, this::handleInvalidCommand).run();
+    }
+
+    /*
+     * EFFECTS: Prints error message when user input is invalid.
+     */
+    private void handleInvalidCommand() {
+        System.out.println("Selection not valid...");
+    }
+
+    private void quitApp() {
+        System.out.println("Quitting app...");
+        System.exit(0);
     }
 
     // MODIFIES: this
     // EFFECTS: initializes accounts
     private void init() {
-        cardGenerator = new FlashcardGenerator();
-        viewedFlashcards = new ArrayList<>();
+        observers = new ArrayList<>();
+        spacedRepetition = new SpacedRepetition();
+        scoreQuiz = new ScoreQuiz();
+        addObservers(spacedRepetition);
+        addObservers(scoreQuiz);
+        currentCard = null;
         input = new Scanner(System.in);
         input.useDelimiter("\r?\n|\r");
+        initializeCommands();
+
     }
 
     // EFFECTS: displays menu of options to user
     private void displayMenu() {
         System.out.println("\nSelect from:");
-        System.out.println("\ta -> add new word to deck ");
-        System.out.println("\tr -> remove word from deck ");
+        System.out.println("\ta -> Add new word to deck ");
+        System.out.println("\tr -> Remove word from deck ");
         System.out.println("\ts -> Start Quiz");
         System.out.println("\tv -> View Vocabulary List");
         // System.out.println("\te -> End Quiz");
-        System.out.println("\tq -> quit");
+        System.out.println("\tq -> Quit");
     }
 
     // MODIFIES: this
     // EFFECTS: conducts a deposit transaction
     private void doAddFlashcard() {
-        System.out.println("Provide new word: ");
+        System.out.println("Enter new word: ");
         String word = input.next();
 
-        System.out.println("Provide its translation: ");
+        System.out.println("Enter its translation: ");
         String translation = input.next();
 
-        System.out.println("How difficult is the word? (Easy, Medium, Hard): ");
-        Difficulty difficulty = Difficulty.valueOf(input.next().toUpperCase());
+        System.out.println("Select the language to which the word belongs");
+        System.out.println("\t1 -> English");
+        System.out.println("\t2 -> German");
 
-        System.out.println("To which Part of Speech does the word belong to? (Noun,Verb,Adjective or Adverb)");
-        PartOfSpeech partOfSpeech = PartOfSpeech.valueOf(input.next().toUpperCase());
+        String language = input.next();
 
-        Flashcard card = new Flashcard(word, translation, difficulty, partOfSpeech);
-        cardGenerator.addFlashcard(card);
+        Flashcard card;
+        switch (language) {
+            case "1":
+                card = new Flashcard(word, translation);
+                scoreQuiz.addFlashcard(card);
+                spacedRepetition.addFlashcard(card);
+                System.out.println("Add Successful!");
+                break;
+
+            case "2":
+                System.out.println("Enter the gender of word. MASCULINE, FEMININE, NEUTER or NA if not applicable");
+                Gender gender = Gender.valueOf(input.next());
+                card = new Germ_Flashcard(word, translation, gender);
+                scoreQuiz.addFlashcard(card);
+                spacedRepetition.addFlashcard(card);
+                System.out.println("Add Successful!");
+                break;
+        }
+
     }
 
     // MODIFIES: this
-    // EFFECTS: conducts a withdraw transaction
+    // EFFECTS: removed card from listofflashcards if word is found as either the translation or word itself.
     private void doRemoveFlashcard() {
-        System.out.print("Enter word you wish to remove from deck: ");
-        String card = input.nextLine();
-        List<Flashcard> cards = cardGenerator.getFlashcards();
+        System.out.print("Enter word you wish to remove from deck: \n");
+        String word = input.next();
+
+        Set<Flashcard> cards = scoreQuiz.getFlashcards();
         Boolean isThere = false;
 
         for (Flashcard f : cards) {
-            if (card.equals(f)) {
-                cardGenerator.removeflashcard(f);
+            if (word.equals(f.getWord()) || word.equals(f.getTranslation())) {
                 isThere = true;
+                scoreQuiz.removeflashcard(f);
+                System.out.println("Action Successful!");
+               
             }
-
+           
+        }
             if (!isThere)
                 System.out.println("Error: Word not found in deck");
         }
 
-    }
+    
 
-    // MODIFIES: this
-    // EFFECTS: conducts a transfer transaction
+    /*
+     * EFFECTS: prompts user to choose between SpacedRepetitionQuiz, ScoreQuiz
+     * REQUIRES: Response to be either SpacedRepetitionQuiz or ScoreQuiz
+     */
     private void doStartQuiz() {
-        while (!allWordsInDeckAsked()) {
-            Flashcard card = cardGenerator.nextFlashCard();
-            viewedFlashcards.add(card);
-            System.out.println("Translate " + card.getWord());
-            String translation = input.next();
-            Boolean score = cardGenerator.isAnswerCorrect(card, translation);
+        System.out.println("Select the Type of Quiz");
+        System.out.println("\ta -> Score Quiz");
+        System.out.println("\tb -> SpacedRepetition");
 
+        String quizType = input.next();
 
-            if (score) {
-                System.out.println("Correct!");
-            } else {
-                System.out.println("Close! The correct translation is " + card.getTranslation());
-            }
+        switch (quizType) {
+
+            case "a":
+                doScoreQuiz();
+                break;
+
+            case "b":
+                doSpacedRepetition();
+                break;
 
         }
     }
-/*
- * EFFECTS: Helper method that returns true when all words in the deck have been asked during the quiz
- * 
- */
-    private Boolean allWordsInDeckAsked() {
-        List<Flashcard> cards = cardGenerator.getFlashcards();
-      return viewedFlashcards.size()> 1 && viewedFlashcards.size() == cards.size();
-       
+
+    /*
+     * EFFECTS:
+     * questions are asked in a random order.
+     * when user provides a wrong answer the answer will be repeated at some point
+     * in the quiz.
+     * 
+     */
+    private void doSpacedRepetition() {
+       int seenCardsSize = spacedRepetition.getSeenFlashcards().size();
+        int deckSize = spacedRepetition.getFlashcards().size();
+        if (deckSize > 0) {
+            System.out.println("Translate the following words");
+            while (deckSize > seenCardsSize) {
+                currentCard = spacedRepetition.getNextFlashcard();
+                System.out.println(currentCard.getWord());
+                String answer = input.next();
+                notifyObservers(currentCard, answer);
+                seenCardsSize = spacedRepetition.getSeenFlashcards().size();
+            }
+            System.out.println("Congrats! You have translated all the " + deckSize + " words in Deck correctly.");
+            spacedRepetition.resetDeck();
+        } else {
+            System.out.println("Error: There are no cards in deck");
+
+        }
     }
 
+    private void doScoreQuiz() {
+        int seenCardsSize = scoreQuiz.getSeenFlashcards().size();
+        int deckSize = scoreQuiz.getFlashcards().size();
+
+        if (deckSize > 0) {
+            System.out.println("Translate the following words: ");
+
+            while (deckSize >= seenCardsSize) {
+                currentCard = scoreQuiz.getNextFlashcard();
+                System.out.println(currentCard.getWord());
+                String answer = input.next();
+                notifyObservers(currentCard, answer);
+                 seenCardsSize = scoreQuiz.getSeenFlashcards().size();
+            }
+
+            System.out.println("Congrats! Your Final Score is " + scoreQuiz.getScore() + "/"  +  deckSize);
+            scoreQuiz.resetDeck();
+
+        } else {
+            System.out.println("Error: There are no cards in deck");
+        }
+    }
+
+    /*
+     * EFFECTS: Helper method that returns true when all words in the deck have been
+     * asked during the quiz
+     * 
+     */
+    // private Boolean allWordsInDeckAsked() {
+    // Set <Flashcard> cards = scoreQuiz.getFlashcards();
+    // return viewedFlashcards.size() > 1 && viewedFlashcards.size() ==
+    // cards.size();
+
+    // }
 
     /*
      * Effects : Displays a list of all new words in the deck and their translation
      */
     private void doViewVocabularyList() {
-        List<Flashcard> cards = cardGenerator.getFlashcards();
-        System.out.println("Vocabulary List (Word + Translation");
+        Set<Flashcard> cards = scoreQuiz.getFlashcards();
+        System.out.println("Vocabulary List (Word + Translation)");
         for (Flashcard card : cards) {
             System.out.println(card.getWord() + "- " + card.getTranslation());
         }
 
     }
 
-    // Changed return of NextFlashcard to flashcard making this helper methos
-    // irrelevant for now.
-    // private Flashcard getFlashcard(String word) {
-    // List<Flashcard> cards = cardGenerator.getFlashcards();
-    // for (Flashcard card : cards) {
-    // if (card.getWord().equalsIgnoreCase(word)) {
-    // return card;
-    // }
-    // }
-    // return null;
+    @Override
+    public void notifyObservers(Flashcard card, String s) {
+
+        for (Observer o : observers) {
+            if (o != null) {
+                o.update(currentCard, s);
+            }
+        }
+    }
+
+    @Override
+    public void addObservers(Observer o) {
+        if (!observers.contains(o)) {
+            observers.add(o);
+        }
+    }
+
+    @Override
+    public void removeObserver(Observer o) {
+        if (observers.contains(o)) {
+            observers.remove(o);
+        }
+    }
 
 }
 

@@ -1,8 +1,9 @@
 package model;
 
-// This abstract class represents a general flashcard containing a word and its translation.
-// It also includes the word's GENDER level and  part of speech.
-public abstract class Flashcard {
+// This class represents a general flashcard containing a word and its translation.
+// It also includes the word's part of speech.
+// Suitable for nongendered languages;
+public class Flashcard {
 
     protected String word;
     protected String translation;
